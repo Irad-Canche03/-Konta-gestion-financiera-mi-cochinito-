@@ -1,0 +1,136 @@
+/* 
+Programa: Gestor Financiero
+Objetivo del primer prototipo del código: Implementar una interfaz en consola que permita al usuario registrar ingresos y gastos financieros personales.
+Autor: Canche Galvan Irad Francisco y Rosel Hermo Diego Leonardo
+Versión: 1.0
+Compilador: Zinjal
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+const int MAX_DESC = 100;
+const int MAX_CAT = 30;
+const char *ARCHIVO_DATOS = "movimientos.txt";
+
+typedef enum {
+	INGRESO = 1,
+	GASTO = 2
+} TipoOperacion;
+
+typedef struct {
+	char descripcion[100]; // tamaño de MAX_DESC
+	char categoria[30];    // tamaño de MAX_CAT
+	char fecha[11];        // formato "DD/MM/AAAA"
+	float monto;
+	TipoOperacion tipo;
+} Movimiento;
+
+// Prototipos de funciones
+void mostrarMenuPrincipal();
+void registrarMovimiento();
+void funcionNoImplementada(const char *nombre);
+
+int main() {
+	int opcion;
+	
+	do {
+		mostrarMenuPrincipal();
+		printf("Seleccione una opción: ");
+		scanf("%d", &opcion);
+		getchar(); 
+		
+		switch (opcion) {
+		case 1:
+			registrarMovimiento();
+			break;
+		case 2:
+			funcionNoImplementada("Ver balance financiero");
+			break;
+		case 3:
+			funcionNoImplementada("Generar reporte");
+			break;
+		case 4:
+			funcionNoImplementada("Calcular impuestos");
+			break;
+		case 5:
+			funcionNoImplementada("Exportar declaración");
+			break;
+		case 6:
+			printf("Saliendo del sistema...\n");
+			break;
+		default:
+			printf("Opción no válida. Intente de nuevo.\n");
+		}
+		
+	} while (opcion != 6);
+	
+	return 0;
+}
+
+void mostrarMenuPrincipal() {
+	printf("\n============================\n");
+	printf("     GESTOR FINANCIERO\n");
+	printf("============================\n");
+	printf("1. Registrar ingreso/gasto\n");
+	printf("2. Ver balance financiero\n");
+	printf("3. Generar reporte\n");
+	printf("4. Calcular impuestos\n");
+	printf("5. Exportar declaración\n");
+	printf("6. Salir\n");
+}
+
+void funcionNoImplementada(const char *nombre) {
+	printf("? La opción \"%s\" aún no está implementada en el programa.\n", nombre);
+}
+
+void registrarMovimiento() {
+	Movimiento m;
+	int tipoEntrada;
+	
+	printf("\n--- Registro de Movimiento ---\n");
+	printf("Tipo [1 = Ingreso | 2 = Gasto]: ");
+	scanf("%d", &tipoEntrada);
+	getchar();
+	
+	if (tipoEntrada != INGRESO && tipoEntrada != GASTO) {
+		printf("Tipo inválido. Operación cancelada.\n");
+		return;
+	}
+	
+	m.tipo = tipoEntrada;
+	
+	printf("Descripción: ");
+	fgets(m.descripcion, sizeof(m.descripcion), stdin);
+	m.descripcion[strcspn(m.descripcion, "\n")] = '\0';
+	
+	printf("Categoría: ");
+	fgets(m.categoria, sizeof(m.categoria), stdin);
+	m.categoria[strcspn(m.categoria, "\n")] = '\0';
+	
+	printf("Fecha (DD/MM/AAAA): ");
+	fgets(m.fecha, sizeof(m.fecha), stdin);
+	m.fecha[strcspn(m.fecha, "\n")] = '\0';
+	
+	printf("Monto: ");
+	scanf("%f", &m.monto);
+	getchar();
+	
+	if (m.monto <= 0) {
+		printf("Monto inválido. Operación cancelada.\n");
+		return;
+	}
+	
+	FILE *archivo = fopen(ARCHIVO_DATOS, "a");
+	if (!archivo) {
+		printf("Error al abrir el archivo.\n");
+		return;
+	}
+	
+	fprintf(archivo, "%s|%s|%s|%.2f|%d\n",
+			m.fecha, m.categoria, m.descripcion, m.monto, m.tipo);
+	fclose(archivo);
+	
+	printf("? Movimiento registrado correctamente.\n");
+}
+
