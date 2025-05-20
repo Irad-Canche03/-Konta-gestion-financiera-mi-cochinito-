@@ -1,0 +1,103 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_DESC 100
+#define MAX_CAT 30
+#define ARCHIVO_DATOS "movimientos.txt"
+
+typedef enum {
+    INGRESO = 1,
+    GASTO = 2
+} TipoOperacion;
+
+typedef struct {
+    char descripcion[MAX_DESC];
+    char categoria[MAX_CAT];
+    char fecha[11];
+    float monto;
+    TipoOperacion tipo;
+} Movimiento;
+
+void mostrarMenu() {
+    printf("\n===== KONTA - MI COCHINITO =====\n");
+    printf("1. Registrar ingreso/gasto\n");
+    printf("2. Ver balance general\n");
+    printf("3. Salir\n");
+}
+
+void registrarMovimiento() {
+    Movimiento m;
+    FILE *f = fopen(ARCHIVO_DATOS, "a");
+
+    if (!f) {
+        printf("Error al abrir el archivo.\n");
+        return;
+    }
+
+    printf("Tipo [1 = Ingreso | 2 = Gasto]: ");
+    scanf("%d", &m.tipo);
+    getchar();
+
+    printf("Descripción: ");
+    fgets(m.descripcion, MAX_DESC, stdin);
+    m.descripcion[strcspn(m.descripcion, "\n")] = '\0';
+
+    printf("Categoría: ");
+    fgets(m.categoria, MAX_CAT, stdin);
+    m.categoria[strcspn(m.categoria, "\n")] = '\0';
+
+    printf("Fecha (DD/MM/AAAA): ");
+    fgets(m.fecha, 11, stdin);
+    m.fecha[strcspn(m.fecha, "\n")] = '\0';
+
+    printf("Monto: ");
+    scanf("%f", &m.monto);
+
+    fprintf(f, "%s|%s|%s|%.2f|%d\n", m.fecha, m.categoria, m.descripcion, m.monto, m.tipo);
+    fclose(f);
+    printf("Movimiento guardado.\n");
+}
+
+void verBalanceGeneral() {
+    FILE *f = fopen(ARCHIVO_DATOS, "r");
+    Movimiento m;
+    float ingresos = 0, gastos = 0;
+    char linea[200];
+
+    if (!f) {
+        printf("No hay datos disponibles.\n");
+        return;
+    }
+
+    while (fgets(linea, sizeof(linea), f)) {
+        sscanf(linea, "%10[^|]|%29[^|]|%99[^|]|%f|%d", m.fecha, m.categoria, m.descripcion, &m.monto, (int*)&m.tipo);
+        if (m.tipo == INGRESO) ingresos += m.monto;
+        else gastos += m.monto;
+    }
+
+    fclose(f);
+    printf("Ingresos: $%.2f\n", ingresos);
+    printf("Gastos  : $%.2f\n", gastos);
+    printf("Saldo   : $%.2f\n", ingresos - gastos);
+}
+
+int main() {
+    int opcion;
+    do {
+        mostrarMenu();
+        printf("Seleccione una opción: ");
+        scanf("%d", &opcion);
+        getchar();
+
+        switch (opcion) {
+            case 1: registrarMovimiento(); break;
+            case 2: verBalanceGeneral(); break;
+            case 3: printf("Saliendo...\n"); break;
+            default: printf("Opción no válida.\n");
+        }
+
+    } while (opcion != 3);
+
+    return 0;
+}
