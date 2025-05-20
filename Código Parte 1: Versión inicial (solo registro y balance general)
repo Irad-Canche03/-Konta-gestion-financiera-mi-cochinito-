@@ -1,3 +1,10 @@
+/* 
+Programa: "Konta gestion financiera (mi cochinito)"
+Objetivo: Implementar una versión inicial que permita registrar ingresos y gastos personales, y visualizar un balance general acumulado de forma sencilla, utilizando estructuras, cadenas, archivos y control de flujo.
+Autor: Canche Galvan Irad Francisco y Rosel Hermo Diego Leonardo
+Versión: 1.0
+Compilador: Zinjal
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
