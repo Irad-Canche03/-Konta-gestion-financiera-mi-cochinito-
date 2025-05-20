@@ -1,0 +1,60 @@
+// Se agregaron balances por tipo (diario, mensual, anual) y exportación a CSV
+
+void verBalance() {
+    int tipo;
+    printf("\nTipo de balance:\n1. Diario\n2. Mensual\n3. Anual\nSeleccione: ");
+    scanf("%d", &tipo);
+    getchar();
+    balanceFiltrado(tipo);
+}
+
+void balanceFiltrado(int tipo) {
+    FILE *f = fopen(ARCHIVO_DATOS, "r");
+    Movimiento m;
+    char linea[200], filtro[11];
+    float ingresos = 0, gastos = 0;
+
+    if (!f) {
+        printf("No hay datos disponibles.\n");
+        return;
+    }
+
+    printf("Ingrese la fecha (%s): ", tipo == 1 ? "DD/MM/AAAA" : tipo == 2 ? "MM/AAAA" : "AAAA");
+    fgets(filtro, sizeof(filtro), stdin);
+    filtro[strcspn(filtro, "\n")] = '\0';
+
+    while (fgets(linea, sizeof(linea), f)) {
+        sscanf(linea, "%10[^|]|%29[^|]|%99[^|]|%f|%d", m.fecha, m.categoria, m.descripcion, &m.monto, (int*)&m.tipo);
+        if (strncmp(m.fecha + (tipo == 1 ? 0 : tipo == 2 ? 3 : 6), filtro, tipo == 1 ? 10 : tipo == 2 ? 7 : 4) == 0) {
+            if (m.tipo == INGRESO) ingresos += m.monto;
+            else gastos += m.monto;
+        }
+    }
+
+    fclose(f);
+    printf("Ingresos: $%.2f\n", ingresos);
+    printf("Gastos  : $%.2f\n", gastos);
+    printf("Saldo   : $%.2f\n", ingresos - gastos);
+}
+
+void exportarCSV() {
+    FILE *f = fopen(ARCHIVO_DATOS, "r");
+    FILE *csv = fopen("declaracion.csv", "w");
+    Movimiento m;
+    char linea[200];
+
+    if (!f || !csv) {
+        printf("Error al exportar.\n");
+        return;
+    }
+
+    fprintf(csv, "Fecha,Categoría,Descripción,Monto,Tipo\n");
+    while (fgets(linea, sizeof(linea), f)) {
+        sscanf(linea, "%10[^|]|%29[^|]|%99[^|]|%f|%d", m.fecha, m.categoria, m.descripcion, &m.monto, (int*)&m.tipo);
+        fprintf(csv, "%s,%s,%s,%.2f,%s\n", m.fecha, m.categoria, m.descripcion, m.monto, m.tipo == INGRESO ? "Ingreso" : "Gasto");
+    }
+
+    fclose(f);
+    fclose(csv);
+    printf("Archivo CSV exportado.\n");
+}
