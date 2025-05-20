@@ -1,3 +1,11 @@
+/* 
+Programa: "Konta gestion financiera (mi cochinito)"
+Objetivo: Ampliar la funcionalidad del programa para permitir visualizar balances filtrados por día, mes o año, y exportar todos los movimientos financieros en un archivo CSV compatible con hojas de cálculo.
+Autores: Canche Galvan Irad Francisco y Rosel Hermo Diego Leonardo
+Versión: 1.1
+Compilador: Zinjal
+*/
+
 // Se agregaron balances por tipo (diario, mensual, anual) y exportación a CSV
 
 void verBalance() {
