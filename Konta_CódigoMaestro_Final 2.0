@@ -2,7 +2,7 @@
 Programa: "Konta gestion financiera (mi cochinito)"
 Objetivo: Desarrollar una aplicación en consola que permita al usuario registrar, consultar y analizar ingresos y gastos personales mediante el uso de estructuras, archivos, arreglos, cadenas y control de flujo, incorporando funciones de balance por fecha y planes de ahorro.
 Autor: Canche Galvan Irad Francisco y Rosel Hermo Diego Leonardo
-Versión: 1.2
+Versión: 2.0
 Compilador: Zinjal
 */
 
