@@ -1,0 +1,283 @@
+/* 
+Programa: "Konta gestion financiera (mi cochinito)"
+Objetivo: Desarrollar una aplicación en consola que permita al usuario registrar, consultar y analizar ingresos y gastos personales mediante el uso de estructuras, archivos, arreglos, cadenas y control de flujo, incorporando funciones de balance por fecha y planes de ahorro.
+Autor: Canche Galvan Irad Francisco y Rosel Hermo Diego Leonardo
+Versión: 1.2
+Compilador: Zinjal
+*/
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Constantes 
+#define MAX_DESC 100
+#define MAX_CAT 30
+#define MAX_FECHA 11
+#define ARCHIVO_DATOS "movimientos.txt"
+
+// Enumeración para distinguir entre ingreso y gasto
+typedef enum {
+    INGRESO = 1,
+    GASTO = 2
+} TipoOperacion;
+
+// Estructura para representar un movimiento financiero
+typedef struct {
+    char descripcion[MAX_DESC];
+    char categoria[MAX_CAT];
+    char fecha[MAX_FECHA]; // Formato: DD/MM/AAAA
+    float monto;
+    TipoOperacion tipo;
+} Movimiento;
+
+// Prototipos de funciones
+void mostrarMenu();
+void registrarMovimiento();
+void verBalance();
+void balanceFiltrado(int tipo);
+void generarReporte();
+void calcularImpuestos();
+void exportarDeclaracion();
+void planesAhorro();
+
+// Función principal
+int main() {
+    int opcion;        //Entrada
+
+    do {                           //Proceso
+        mostrarMenu();
+        printf("Seleccione una opcion: ");
+        scanf("%d", &opcion);
+        getchar();
+
+        switch (opcion) {
+            case 1: registrarMovimiento(); break;
+            case 2: verBalance(); break;
+            case 3: generarReporte(); break;
+            case 4: planesAhorro(); break;
+            case 5: calcularImpuestos(); break;
+            case 6: exportarDeclaracion(); break;
+            case 7: printf("Saliendo del sistema...\n"); break;
+            default: printf("Opción no valida.\n");
+        }
+        //Salida
+    } while (opcion != 7);
+
+    return 0;
+}
+//Funciones 
+
+void mostrarMenu() {
+    printf("\n===== KONTA - MI COCHINITO =====\n");
+    printf("1. Registrar ingreso/gasto\n");
+    printf("2. Ver balance financiero\n");
+    printf("3. Generar reporte\n");
+    printf("4. Planes de ahorro\n");
+    printf("5. Calcular impuestos anuales\n");
+    printf("6. Exportar declaracion\n");
+    printf("7. Salir\n");
+}
+
+void registrarMovimiento() {
+    Movimiento m;
+    FILE *f = fopen(ARCHIVO_DATOS, "a");
+
+    if (!f) {
+        printf("Error al abrir archivo.\n");
+        return;
+    }
+
+    printf("\n--- Registrar Movimiento ---\n");
+    printf("Tipo [1 = Ingreso | 2 = Gasto]: ");
+    int tempTipo;
+    scanf("%d", &tempTipo);
+    getchar();
+    m.tipo = (TipoOperacion)tempTipo;
+
+    if (m.tipo != INGRESO && m.tipo != GASTO) {
+        printf("Tipo invalido.\n");
+        fclose(f);
+        return;
+    }
+
+    printf("Descripcion: ");
+    fgets(m.descripcion, MAX_DESC, stdin);
+    m.descripcion[strcspn(m.descripcion, "\n")] = '\0';
+
+    printf("Categoria: ");
+    fgets(m.categoria, MAX_CAT, stdin);
+    m.categoria[strcspn(m.categoria, "\n")] = '\0';
+
+    printf("Fecha (DD/MM/AAAA): ");
+    fgets(m.fecha, MAX_FECHA, stdin);
+    m.fecha[strcspn(m.fecha, "\n")] = '\0';
+
+    printf("Monto: ");
+    scanf("%f", &m.monto);
+    getchar();
+
+    if (m.monto <= 0) {
+        printf("Monto inválido.\n");
+        fclose(f);
+        return;
+    }
+
+    fprintf(f, "%s|%s|%s|%.2f|%d\n", m.fecha, m.categoria, m.descripcion, m.monto, m.tipo);
+    fclose(f);
+
+    printf("? Movimiento guardado.\n");
+}
+
+void verBalance() {
+    int tipo;
+    printf("\n--- Tipo de balance ---\n");
+    printf("1. Diario\n2. Mensual\n3. Anual\n");
+    printf("Seleccione: ");
+    scanf("%d", &tipo);
+    getchar();
+    balanceFiltrado(tipo);
+}
+
+void balanceFiltrado(int tipo) {
+    FILE *f = fopen(ARCHIVO_DATOS, "r");
+    if (!f) {
+        printf("No hay datos.\n");
+        return;
+    }
+
+    char filtro[MAX_FECHA], linea[200];
+    Movimiento m;
+    float ingresos = 0, gastos = 0;
+
+    printf("Fecha para filtrar (%s): ", tipo == 1 ? "DD/MM/AAAA" : tipo == 2 ? "MM/AAAA" : "AAAA");
+    fgets(filtro, sizeof(filtro), stdin);
+    filtro[strcspn(filtro, "\n")] = '\0';
+
+    while (fgets(linea, sizeof(linea), f)) {
+        sscanf(linea, "%10[^|]|%29[^|]|%99[^|]|%f|%d",
+               m.fecha, m.categoria, m.descripcion, &m.monto, (int *)&m.tipo);
+        if (strncmp(m.fecha + (tipo == 1 ? 0 : tipo == 2 ? 3 : 6), filtro,
+                    tipo == 1 ? 10 : tipo == 2 ? 7 : 4) == 0) {
+            if (m.tipo == INGRESO) ingresos += m.monto;
+            else gastos += m.monto;
+        }
+    }
+
+    fclose(f);
+    printf("\nIngresos: $%.2f\nGastos: $%.2f\nSaldo: $%.2f\n", ingresos, gastos, ingresos - gastos);
+}
+
+void generarReporte() {
+    FILE *f = fopen(ARCHIVO_DATOS, "r");
+    char linea[200];
+    Movimiento m;
+
+    if (!f) {
+        printf("No hay movimientos.\n");
+        return;
+    }
+
+    printf("\n--- Reporte ---\n");
+    while (fgets(linea, sizeof(linea), f)) {
+        sscanf(linea, "%10[^|]|%29[^|]|%99[^|]|%f|%d",
+               m.fecha, m.categoria, m.descripcion, &m.monto, (int *)&m.tipo);
+        printf("%s | %s | %s | $%.2f | %s\n", m.fecha, m.categoria, m.descripcion,
+               m.monto, m.tipo == INGRESO ? "Ingreso" : "Gasto");
+    }
+
+    fclose(f);
+}
+
+void calcularImpuestos() {
+    FILE *f = fopen(ARCHIVO_DATOS, "r");
+    char linea[200];
+    Movimiento m;
+    float ingresos = 0;
+
+    if (!f) {
+        printf("No hay datos.\n");
+        return;
+    }
+
+    while (fgets(linea, sizeof(linea), f)) {
+        sscanf(linea, "%10[^|]|%29[^|]|%99[^|]|%f|%d",
+               m.fecha, m.categoria, m.descripcion, &m.monto, (int *)&m.tipo);
+        if (m.tipo == INGRESO) ingresos += m.monto;
+    }
+
+    fclose(f);
+    printf("\nTotal ingresos: $%.2f\nImpuesto estimado (16%%): $%.2f\n", ingresos, ingresos * 0.16f);
+}
+
+void exportarDeclaracion() {
+    FILE *f = fopen(ARCHIVO_DATOS, "r");
+    FILE *csv = fopen("declaracion.csv", "w");
+    char linea[200];
+    Movimiento m;
+
+    if (!f || !csv) {
+        printf("Error al exportar.\n");
+        if (f) fclose(f);
+        if (csv) fclose(csv);
+        return;
+    }
+
+    // Encabezados para CSV
+    fprintf(csv, "Fecha,Categoria,Descripcion,Monto,Tipo\n");
+
+    while (fgets(linea, sizeof(linea), f)) {
+        sscanf(linea, "%10[^|]|%29[^|]|%99[^|]|%f|%d",
+               m.fecha, m.categoria, m.descripcion, &m.monto, (int *)&m.tipo);
+        fprintf(csv, "%s,%s,%s,%.2f,%s\n", m.fecha, m.categoria, m.descripcion, m.monto,
+                m.tipo == INGRESO ? "Ingreso" : "Gasto");
+    }
+
+    fclose(f);
+    fclose(csv);
+    printf("? Exportado como declaracion.csv\n");
+}
+
+
+void planesAhorro() {
+    FILE *f = fopen(ARCHIVO_DATOS, "r");
+    char linea[200];
+    Movimiento m;
+    int plan;
+    char fecha[MAX_FECHA];
+
+    if (!f) {
+        printf("Error al abrir archivo.\n");
+        return;
+    }
+
+    printf("\n--- Planes de ahorro ---\n1. Básico (10%% ingresos)\n2. 20%% Ahorro, 50%% Gasto fijo, 30%% Extras\nSeleccione: ");
+    scanf("%d", &plan);
+    getchar();
+
+    printf("Ingrese fecha para el cálculo (MM/AAAA): ");
+    fgets(fecha, MAX_FECHA, stdin);
+    fecha[strcspn(fecha, "\n")] = '\0';
+
+    float ingresos = 0;
+    while (fgets(linea, sizeof(linea), f)) {
+        sscanf(linea, "%10[^|]|%29[^|]|%99[^|]|%f|%d",
+               m.fecha, m.categoria, m.descripcion, &m.monto, (int *)&m.tipo);
+
+        if (strstr(m.fecha, fecha) && m.tipo == INGRESO) {
+            ingresos += m.monto;
+        }
+    }
+    fclose(f);
+
+    if (plan == 1) {
+        printf("\n? Ahorro sugerido: $%.2f (10%% de ingresos del mes)\n", ingresos * 0.10f);
+    } else if (plan == 2) {
+        printf("\n? Ahorro con propósito: $%.2f\n", ingresos * 0.20f);
+        printf("? Gastos fijos: $%.2f\n", ingresos * 0.50f);
+        printf("? Gastos extras: $%.2f\n", ingresos * 0.30f);
+    } else {
+        printf("Opción inválida.\n");
+    }
+}
